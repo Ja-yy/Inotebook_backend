@@ -1,5 +1,5 @@
 """main file for  FastAPI"""
-
+from app import logger
 from fastapi.responses import RedirectResponse
 from fastapi import FastAPI
 
@@ -24,8 +24,7 @@ app.add_middleware(
 )
 
 
-# Main routes
-
+logger.info('FastAPI server started!!!')
 
 @app.get("/")
 def get_root():
