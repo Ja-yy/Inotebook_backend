@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file="dev.env", env_file_encoding="utf-8")
 
     DATABASE_URL: str
-    DATABASE_COLLATION: str
+    DATABASE_COLLECTION: str
+    DATABASE_NAME: str
 
     CORS_ORIGINS: List[str]
     CORS_ALLOW_CREDENTIALS: bool

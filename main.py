@@ -8,6 +8,8 @@ from app.version import __version__
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.api.routes.user import router as user_router
+from app.db.base import db
 
 app = FastAPI(
     title="FastApi Service",
@@ -24,7 +26,15 @@ app.add_middleware(
 )
 
 
-logger.info('FastAPI server started!!!')
+@app.on_event("startup")
+async def startup():
+    """Initialize Database."""
+    await db.init()
+    # await db.create_all()
+
+
+logger.info("FastAPI server started!!!")
+
 
 @app.get("/")
 def get_root():
@@ -34,3 +44,6 @@ def get_root():
     :returns: Redirection to the redoc page.
     """
     return RedirectResponse(url="docs/")
+
+
+app.include_router(user_router)
