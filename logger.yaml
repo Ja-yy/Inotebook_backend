@@ -1,0 +1,40 @@
+version: 1
+disable_existing_loggers: False
+
+formatters:
+  default:
+    format: "%(asctime)s | %(levelname)-6s | %(name)s  | %(funcName)s() | L%(lineno)-4d | %(message)s"
+
+  detailedFormatter:
+    format: "%(asctime)s | %(levelname)-6s | %(name)s | %(funcName)s() | L%(lineno)-4d %(message)s | %(pathname)s L%(lineno)-4d"
+
+handlers:
+  default:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: default
+    stream: ext://sys.stderr
+
+  detailDefault:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: detailedFormatter
+    stream: ext://sys.stderr
+    
+loggers:
+  "__main__":
+    level: NOTSET
+    handlers:
+      - default
+    propagate: no
+  uvicorn.error:
+    level: NOTSET
+    handlers:
+      - detailDefault
+    propagate: no
+
+root:
+  level: DEBUG
+  handlers:
+    - default
+  propagate: no

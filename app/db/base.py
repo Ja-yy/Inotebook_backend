@@ -1,4 +1,7 @@
-import motor.motor_asyncio
+"""AsyncMongoDBSession
+Async MongoDB Session Manager
+"""
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from app.core.config import settings

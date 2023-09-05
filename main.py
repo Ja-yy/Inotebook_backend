@@ -1,15 +1,18 @@
-"""main file for  FastAPI"""
-from app import logger
-from fastapi.responses import RedirectResponse
+"""APP
+FastAPI app definition, initialization and definition of routes
+"""
+
+import uvicorn
 from fastapi import FastAPI
-
-from app.version import __version__
-
+from fastapi.responses import RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 
+from app import logger
+from app.api.router import router
 from app.core.config import settings
-from app.api.routes.user import router as user_router
 from app.db.base import db
+from app.middlewares.exception_handler import request_handler
+from app.version import __version__
 
 app = FastAPI(
     title="FastApi Service",
@@ -25,15 +28,16 @@ app.add_middleware(
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
 
+app.middleware("http")(request_handler)
+
 
 @app.on_event("startup")
 async def startup():
     """Initialize Database."""
+    logger.info("FastAPI server started!!!")
+    logger.info("Connecting Mongodb")
     await db.init()
-    # await db.create_all()
-
-
-logger.info("FastAPI server started!!!")
+    logger.info("Mogodb Connnected!!!")
 
 
 @app.get("/")
@@ -46,4 +50,14 @@ def get_root():
     return RedirectResponse(url="docs/")
 
 
-app.include_router(user_router)
+app.include_router(router)
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        log_config="logger.yaml",
+    )

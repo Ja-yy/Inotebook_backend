@@ -1,3 +1,7 @@
+"""SETTINGS
+Settings loaders using Pydantic BaseSettings classes (load from environment variables / dotenv file)
+"""
+
 from typing import List
 
 from dotenv import load_dotenv
