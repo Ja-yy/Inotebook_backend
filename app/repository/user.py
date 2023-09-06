@@ -3,7 +3,7 @@ User repositores for database operations
 """
 
 from app.core.cutom_types import CreateSchemaType
-from app.models.user import User, UserBase
+from app.models.user import User
 from app.repository.base import BaseRepository
 from app.utils.custom_exception import AlreadyExistsException
 
@@ -22,4 +22,4 @@ class UserRepository(BaseRepository):
 
     async def get_user_by_email(self, email: str):
         cursor = await self.collection.find_one({"email": email})
-        return UserBase(**cursor).model_dump()
+        return User(**cursor).model_dump()

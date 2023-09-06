@@ -3,10 +3,12 @@ Models for user data including 'UserBase', 'UserCreate', and 'User' classes.
 """
 
 
+from typing import Optional
+
 from bson.objectid import ObjectId
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models.common import DateTimeModelMixin
+from app.models.common import DateTimeModelMixin, PyObjectId
 
 
 class UserBase(DateTimeModelMixin):
@@ -25,14 +27,15 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     """
-    Schema for representing a user with an additional 'id' field.
+    Schema for representing a user with an additional '_id' field.
     """
 
-    _id: ObjectId
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
 
     class Config:
-        from_attributes = True
+        allow_population_by_field_name = True
         arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 class SignUpResponse(BaseModel):
@@ -52,6 +55,10 @@ class UserSignin(BaseModel):
 class UserSigninResponse(BaseModel):
     """Response model for signin"""
 
+    id: Optional[PyObjectId]
     email: EmailStr
     access_token: str
     token_type: str
+
+    class Config:
+        arbitrary_types_allowed = True

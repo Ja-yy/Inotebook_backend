@@ -36,16 +36,23 @@ class BaseRepository(Generic[SchemaType, CreateSchemaType, UpdateSchemaType]):
         return await self.get(result.inserted_id)
 
     async def filter(
-        self, filters: Dict[str, Any] = None, projection: List[str] = None
-    ) -> Union[List[dict], List[Union[dict, Any]]]:
+        self,
+        filters: Dict[str, Any] = None,
+        projection: List[str] = None,
+        is_one: bool = True,
+    ) -> Union[List[dict], List[Union[dict, Any]], Dict]:
         """Filter records based on given parameters and return selected fields from MongoDB."""
 
-        if projection is None:
-            projection = {}
+        projection_dict = {}
 
-        cursor = self.collection.find(filters, projection=projection)
+        if projection:
+            for field in projection:
+                projection_dict[field] = 1
 
-        results = []
-        async for document in cursor:
-            results.append(document)
+        cursor = self.collection.find(filters)
+        results = [self.schema_model(**doc).model_dump() async for doc in cursor]
+        # cursor.to_list()
+        if is_one:
+            return results[0] if results else None
+
         return results
