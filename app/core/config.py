@@ -23,5 +23,9 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: List[str]
     CORS_ALLOW_HEADERS: List[str]
 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    JWT_ACCESS_TOKEN_EXPIRE_HOURS: int
+
 
 settings = Settings()

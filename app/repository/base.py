@@ -7,7 +7,7 @@ from typing import Any, Dict, Generic, List, Type, Union
 
 from app.core.cutom_types import CreateSchemaType, SchemaType, UpdateSchemaType
 from app.db.base import db
-from app.utils.custom_exception import AlreadyExistsException, NotFoundException
+from app.utils.custom_exception import NotFoundException
 
 
 class BaseRepository(Generic[SchemaType, CreateSchemaType, UpdateSchemaType]):
@@ -19,21 +19,16 @@ class BaseRepository(Generic[SchemaType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self) -> None:
         self.collection = db.database[self.collection_name]
 
-    async def get(self, person_id: str):
-        """Retrieve a single Person by its unique id"""
-        document = await self.collection.find_one({"_id": person_id})
+    async def get(self, _id: str):
+        """Retrieve a single record by its unique id"""
+        document = await self.collection.find_one({"_id": _id})
         if not document:
-            raise NotFoundException(person_id)
+            raise NotFoundException(_id)
         return document
 
     async def create(self, db_obj: CreateSchemaType):
         """insert one record"""
         db_obj_in = db_obj.model_dump()
-        user_fill = await self.filter({"email": db_obj_in["email"]})
-        if user_fill:
-            raise AlreadyExistsException(
-                identifier=db_obj_in["email"], message="The user already exists"
-            )
         db_obj_in["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(db_obj_in)
         assert result.acknowledged
@@ -53,5 +48,4 @@ class BaseRepository(Generic[SchemaType, CreateSchemaType, UpdateSchemaType]):
         results = []
         async for document in cursor:
             results.append(document)
-
         return results

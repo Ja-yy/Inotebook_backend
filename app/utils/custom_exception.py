@@ -71,6 +71,14 @@ class AlreadyExistsException(BaseIdentifiedException):
     model = AlreadyExistsError
 
 
+class WrongLoginDetialException(BaseIdentifiedException):
+    """Base error for exception raised because login details is not valid"""
+
+    message = "EmailID or password incorrect"
+    code = statuscode.HTTP_401_UNAUTHORIZED
+    model = WrongCredentialsError
+
+
 def get_exception_responses(*args: Type[BaseAPIException]) -> dict:
     """Given BaseAPIException classes, return a dict of responses used on FastAPI endpoint definition, with the format:
     {statuscode: schema, statuscode: schema, ...}"""

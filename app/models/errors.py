@@ -5,7 +5,13 @@ Models for Error responses. Custom exceptions must be associated with one of the
 # # Installed # #
 from pydantic import BaseModel, Field
 
-__all__ = ("BaseError", "BaseIdentifiedError", "NotFoundError", "AlreadyExistsError")
+__all__ = (
+    "BaseError",
+    "BaseIdentifiedError",
+    "NotFoundError",
+    "AlreadyExistsError",
+    "WrongCredentialsError",
+)
 
 
 class BaseError(BaseModel):
@@ -24,3 +30,7 @@ class NotFoundError(BaseIdentifiedError):
 
 class AlreadyExistsError(BaseIdentifiedError):
     """An entity being created already exists"""
+
+
+class WrongCredentialsError(BaseIdentifiedError):
+    """Wrong Credential provided"""
