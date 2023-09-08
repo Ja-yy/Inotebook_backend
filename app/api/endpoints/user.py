@@ -4,7 +4,7 @@ Endpoints for user signin and signup
 
 from typing import Annotated, Dict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 
 from app.models.user import SignUpResponse, UserCreate, UserSignin, UserSigninResponse
 from app.repository.user import UserRepository
@@ -36,9 +36,9 @@ async def signup(new_user: UserCreate):
 async def signin(user_data: UserSignin):
     db = UserRepository()
     user = await AuthUtils.authenticate_user(db, user_data.email, user_data.password)
-    access_token = JWTUtils.signJWT(user.get("_id"))
+    access_token = JWTUtils.signJWT(user.get("user_id"))
     return {
-        "id": user.get("id"),
+        "user_id": user.get("user_id"),
         "email": user.get("email"),
         "access_token": access_token,
         "token_type": "bearer",

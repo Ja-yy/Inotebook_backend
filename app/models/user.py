@@ -8,7 +8,7 @@ from typing import Optional
 from bson.objectid import ObjectId
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models.common import DateTimeModelMixin, PyObjectId
+from app.models.common import CustomObjectId, DateTimeModelMixin
 
 
 class UserBase(DateTimeModelMixin):
@@ -30,12 +30,19 @@ class User(UserBase):
     Schema for representing a user with an additional '_id' field.
     """
 
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    user_id: CustomObjectId = Field(default_factory=CustomObjectId, alias="_id")
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+        json_schema_extra = {
+            "example": {
+                "name": "Jane Doe",
+                "email": "jdoe@example.com",
+                "password": "$jlsajdlsajdlj4385943v4nv",
+            }
+        }
 
 
 class SignUpResponse(BaseModel):
@@ -55,8 +62,8 @@ class UserSignin(BaseModel):
 class UserSigninResponse(BaseModel):
     """Response model for signin"""
 
-    id: Optional[PyObjectId]
     email: EmailStr
+    user_id: Optional[CustomObjectId]
     access_token: str
     token_type: str
 

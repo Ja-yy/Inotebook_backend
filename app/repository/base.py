@@ -28,7 +28,7 @@ class BaseRepository(Generic[SchemaType, CreateSchemaType, UpdateSchemaType]):
 
     async def create(self, db_obj: CreateSchemaType):
         """insert one record"""
-        db_obj_in = db_obj.model_dump()
+        db_obj_in = db_obj.model_dump(by_alias=True)
         db_obj_in["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(db_obj_in)
         assert result.acknowledged
