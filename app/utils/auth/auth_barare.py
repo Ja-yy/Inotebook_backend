@@ -3,11 +3,12 @@ Class for JWT validation.
 """
 
 import time
-from typing import Any, Dict
+from typing import Annotated, Any, Dict
 
-from fastapi import HTTPException, Request
+from bson.objectid import ObjectId
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 
 from app.core.config import settings
 
@@ -18,7 +19,7 @@ class JWTUtils(HTTPBearer):
     """
 
     @classmethod
-    def signJWT(cls, email: str) -> str:
+    def signJWT(cls, _id) -> str:
         """
         Generates the token using email id.
 
@@ -26,9 +27,10 @@ class JWTUtils(HTTPBearer):
         :returns: token with email as payload.
         """
         payload = {
-            "email": email,
+            "_id": _id,
             # expiry time of 48 hours (sec * min * hour)
-            "expires": time.time() + int(settings.JWT_ACCESS_TOKEN_EXPIRE_HOURS),
+            "expires": time.time()
+            + 60 * 60 * int(settings.JWT_ACCESS_TOKEN_EXPIRE_HOURS),
         }
         api_token = jwt.encode(
             payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
@@ -82,9 +84,14 @@ class JWTBearer(JWTUtils):
                     status_code=403, detail="Invalid authentication scheme."
                 )
             if not self.verifyJWT(credentials.credentials):
-                raise HTTPException(
+                raise ExpiredSignatureError(
                     status_code=403, detail="Invalid token or expired token."
                 )
-            return credentials.credentials
+            payload = self.decodeJWT(credentials.credentials)
+            return {"token": credentials.credentials, "payload": payload}
         else:
-            raise HTTPException(status_code=403, detail="Invalid authorization code.")
+            raise JWTError(status_code=403, detail="Invalid authorization code.")
+
+
+def get_user_id(user_detail: Annotated[Dict, Depends(JWTBearer())]) -> ObjectId:
+    return ObjectId(user_detail.get("payload").get("_id"))

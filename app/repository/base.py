@@ -28,24 +28,45 @@ class BaseRepository(Generic[SchemaType, CreateSchemaType, UpdateSchemaType]):
 
     async def create(self, db_obj: CreateSchemaType):
         """insert one record"""
-        db_obj_in = db_obj.model_dump()
+        db_obj_in = db_obj.model_dump(by_alias=True)
         db_obj_in["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(db_obj_in)
         assert result.acknowledged
 
         return await self.get(result.inserted_id)
 
+    async def update(self, filter_obj: Dict, updated_obj: UpdateSchemaType):
+        document = updated_obj.model_dump(by_alias=True, exclude_none=True)
+        document["updated_at"] = datetime.utcnow()
+        result = await self.collection.find_one_and_update(
+            filter_obj, {"$set": document}, return_document=True
+        )
+        if not result:
+            raise NotFoundException(identifier=str(filter_obj.get("_id")))
+        return result
+
+    async def delete(self, filter_obj: Dict):
+        result = await self.collection.find_one_and_delete(filter_obj)
+        if not result:
+            raise NotFoundException(identifier=str(filter_obj.get("_id")))
+        return result
+
     async def filter(
-        self, filters: Dict[str, Any] = None, projection: List[str] = None
-    ) -> Union[List[dict], List[Union[dict, Any]]]:
+        self,
+        filters: Dict[str, Any] = None,
+        projection: List[str] = None,
+        is_one: bool = True,
+    ) -> Union[List[dict], List[Union[dict, Any]], Dict]:
         """Filter records based on given parameters and return selected fields from MongoDB."""
 
-        if projection is None:
-            projection = {}
+        projection_dict = {}
 
-        cursor = self.collection.find(filters, projection=projection)
+        if projection:
+            projection_dict = {key: 1 for key in projection}
 
-        results = []
-        async for document in cursor:
-            results.append(document)
+        cursor = self.collection.find(filters)
+        results = [self.schema_model(**doc).model_dump() async for doc in cursor]
+        if is_one:
+            return results[0] if results else None
+
         return results
