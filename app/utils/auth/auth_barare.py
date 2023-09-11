@@ -3,9 +3,10 @@ Class for JWT validation.
 """
 
 import time
-from typing import Any, Dict
+from typing import Annotated, Any, Dict
 
-from fastapi import HTTPException, Request
+from bson.objectid import ObjectId
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 
@@ -24,7 +25,6 @@ class JWTUtils(HTTPBearer):
 
         :param email: The email id of the visitor.
         :returns: token with email as payload.
-        TODO:Create token with
         """
         payload = {
             "_id": _id,
@@ -88,7 +88,10 @@ class JWTBearer(JWTUtils):
                     status_code=403, detail="Invalid token or expired token."
                 )
             payload = self.decodeJWT(credentials.credentials)
-
             return {"token": credentials.credentials, "payload": payload}
         else:
             raise JWTError(status_code=403, detail="Invalid authorization code.")
+
+
+def get_user_id(user_detail: Annotated[Dict, Depends(JWTBearer())]) -> ObjectId:
+    return ObjectId(user_detail.get("payload").get("_id"))

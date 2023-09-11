@@ -3,17 +3,14 @@ Models for user data including 'UserBase', 'UserCreate', and 'User' classes.
 """
 
 
-from typing import Optional
-
-from bson.objectid import ObjectId
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models.common import CustomObjectId, DateTimeModelMixin
+from app.models.common import DateTimeModelMixin, PyObjectId
 
 
-class UserBase(DateTimeModelMixin):
+class UserCreate(DateTimeModelMixin):
     """
-    Base schema for user.
+    Schema for creating a user.
     """
 
     name: str = Field(..., description="User name")
@@ -21,21 +18,16 @@ class UserBase(DateTimeModelMixin):
     password: str = Field(..., description="User Password")
 
 
-class UserCreate(UserBase):
-    """Schema for creating a user."""
-
-
-class User(UserBase):
+class User(UserCreate):
     """
     Schema for representing a user with an additional '_id' field.
     """
 
-    user_id: CustomObjectId = Field(default_factory=CustomObjectId, alias="_id")
+    user_id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
 
     class Config:
         populate_by_name = True
         arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
         json_schema_extra = {
             "example": {
                 "name": "Jane Doe",
@@ -45,27 +37,34 @@ class User(UserBase):
         }
 
 
-class SignUpResponse(BaseModel):
-    """response model for sigup"""
+class SignUpRes(BaseModel):
+    """
+    Response model for signup.
+    """
 
     name: str = Field(..., description="User name")
     email: EmailStr = Field(..., description="User email address")
 
 
 class UserSignin(BaseModel):
-    """Schema foe signin"""
+    """
+    Schema for user signin
+    """
 
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., description="User Password")
 
 
-class UserSigninResponse(BaseModel):
-    """Response model for signin"""
+class UserSigninRes(BaseModel):
+    """
+    Response model for user signin.
+    """
 
-    email: EmailStr
-    user_id: Optional[CustomObjectId]
-    access_token: str
-    token_type: str
+    email: EmailStr = Field(..., description="User email address")
+    user_id: PyObjectId = Field(...)
+    access_token: str = Field(...)
+    token_type: str = Field(...)
 
     class Config:
+        populate_by_name = True
         arbitrary_types_allowed = True

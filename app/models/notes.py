@@ -2,17 +2,59 @@
 Models for representing notes with title, description, tag, and creation timestamp.
 """
 
-from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.models.common import DateTimeModelMixin, PyObjectId
 
 
-class Notes(BaseModel):
+class NoteBase(DateTimeModelMixin):
     """
-    Notes schema.
+    Base schema for notes.
     """
 
-    title: str
-    description: str
-    tag: str | None = "General"
-    created_at: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    title: str = Field(..., description="Title of note")
+    description: str = Field(..., description="Note context")
+    tag: str = Field(description="Categorical tag", default="General")
+
+
+class CreateNote(NoteBase):
+    """
+    Schema for creating notes.
+    """
+
+    user_id: Optional[PyObjectId] = Field(None)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Notes(NoteBase):
+    """
+    Schema for representing a note with an additional '_id' field.
+    """
+
+    note_id: PyObjectId = Field(..., alias="_id")
+
+    class Config:
+        arbitrary_types_allowed = True
+        populate_by_name = True
+
+
+class TagList(BaseModel):
+    """
+    Model for a list of tags.
+    """
+
+    tags: List[str]
+
+
+class UpdateNote(BaseModel):
+    """
+    Schema for updating a note
+    """
+
+    title: str = Field(None, description="Title of note")
+    description: str = Field(None, description="Note context")
+    tag: str = Field(description="Categorical tag", default="General")

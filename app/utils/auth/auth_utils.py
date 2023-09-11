@@ -23,7 +23,6 @@ class AuthUtils:
             return cls.pwd_context.verify(plain_password, hashed_password)
 
         user: Dict = await db.filter({"email": email})
-        print("=-=-=-> auth user", user)
         if not user:
             raise NotFoundException(identifier=email, message="User not found")
         if not verify_password(

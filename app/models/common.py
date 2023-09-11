@@ -3,35 +3,40 @@ Common models to inherit
 """
 
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional
+from typing import Annotated, Optional, Union
 
 from bson.objectid import ObjectId
-from pydantic import BaseModel, Field, GetJsonSchemaHandler
-from pydantic_core import CoreSchema, core_schema
+from pydantic import BaseModel, Field
+from pydantic.functional_validators import AfterValidator
 
 
 class DateTimeModelMixin(BaseModel):
+    """
+    DateTimeModelMixin is a base model class that provides timestamp fields.
+    """
+
     created_at: Optional[datetime] = Field(None)
     updated_at: Optional[datetime] = Field(None)
 
 
-class CustomObjectId(ObjectId):
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source: type[Any], handler: Callable[[Any], core_schema.CoreSchema]
-    ) -> core_schema.CoreSchema:
-        return core_schema.general_plain_validator_function(function=cls.validate)
+PyObjectId = Annotated[
+    Union[ObjectId, str],
+    AfterValidator(lambda x: str(x) if ObjectId.is_valid else None),
+    AfterValidator(str),
+]
 
-    @classmethod
-    def validate(cls, v, *kargs):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return str(v)
 
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
-    ) -> Dict[str, Any]:
-        json_schema = handler(core_schema)
-        json_schema.update(type="string")
-        return json_schema
+"""
+`PyObjectId` is a type alias representing a value that can be either an `ObjectId` or a string.
+
+Usage:
+- It allows flexibility in accepting either an `ObjectId` or a string as an identifier.
+- If an `ObjectId` is provided, it is converted to a string representation.
+- If the provided value is not a valid `ObjectId`, it returns `None`.
+
+Example:
+    - Valid `ObjectId`: `ObjectId('60c7b5c2d480f3a7f94c1d90')`
+    - Corresponding `PyObjectId`: `'60c7b5c2d480f3a7f94c1d90'`
+    - Invalid value: `'invalid_id'`
+    - Corresponding `PyObjectId`: `None`
+"""
